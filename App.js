@@ -1,5 +1,6 @@
-import react, {useEffect, useState} from 'react';
+import react, {useEffect, useState, useRef} from 'react';
 import { StyleSheet, Text, View, Button, ScrollView } from 'react-native';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 
 export default function App() {
 
@@ -16,6 +17,27 @@ export default function App() {
     getData();
   }, [])
 
+
+  const rightSwipeActions = () => {
+    return (
+        <View
+          style={styles.deleteButton}
+        >
+          <Text style={{
+            textAlign: 'center',
+            width: '100%',
+            color: '#fff'
+          }}>
+            X
+          </Text>
+        </View>
+    );
+  };
+
+  const swipeFromRightOpen = () => {
+    return true;
+  };
+
   return (
     <>
       <ScrollView style={styles.container}>
@@ -23,11 +45,17 @@ export default function App() {
         <View style={styles.postsWrapper}>
           {posts.map(post => {
               return (
-                <View key={post.id} style={styles.post}>
-                  <Text style={styles.title}>{post.title}</Text>
-                  <View style={styles.separator}></View>
-                  <Text style={styles.content}>{post.body}</Text>
-                </View>
+                <Swipeable
+                  key={post.id}
+                  renderRightActions={rightSwipeActions}
+                  onSwipeableRightOpen={swipeFromRightOpen}
+                >
+                  <View style={styles.post}>
+                    <Text style={styles.title}>{post.title}</Text>
+                    <View style={styles.separator}></View>
+                    <Text numberOfLines={2} style={styles.content}>{post.body}</Text>
+                  </View>
+                </Swipeable>
               )
           })}
         </View>
@@ -57,8 +85,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 5,
     borderTopRightRadius: 5,
     padding: 10,
-    width: '70%',
-    marginBottom: 25
+    width: '100%',
+    marginBottom: 25,
+    backgroundColor: '#fff'
   },
   title: {
     paddingBottom: 5,
@@ -69,5 +98,18 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 1,
     backgroundColor: '#000',
+  },
+  deleteButton: {
+    backgroundColor: 'red',
+    color: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    fontWeight: '600',
+    width: 25,
+    height: 25,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
   }
 });
