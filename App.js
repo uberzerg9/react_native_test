@@ -1,5 +1,19 @@
-import react, {useEffect, useState} from 'react';
-import { StyleSheet, Text, View, ScrollView, Modal, Pressable, TouchableWithoutFeedback } from 'react-native';
+import react, {
+  useEffect, 
+  useState
+} from 'react';
+
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  ScrollView, 
+  Modal, 
+  Pressable, 
+  TouchableWithoutFeedback, 
+  TextInput
+} from 'react-native';
+
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 
 const axios = require('axios').default;
@@ -39,17 +53,35 @@ const PostDetails = (props) => {
                       <Text style={styles.content}>{onePost.body}</Text>
                   </View>
               </View>
+              <View style={styles.formWrapper}>
+                <Text style={styles.title}>Send a comment:</Text>
+                <View>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Your name"
+                    maxLength={255}
+                  />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Your comment"
+                    maxLength={500}
+                  />
+                  <TouchableWithoutFeedback style={styles.sendButton} onPress={handleSubmit}>
+                    <Text style={styles.sendButtonText}>Send</Text>
+                  </TouchableWithoutFeedback>
+                </View>
+              </View>
               <View style={styles.commentsWrapper}>
                   <Text style={styles.title}>Comments: {commentsList.length}</Text>
                   {commentsList.map(comment => {
                   return(
                       <View style={styles.comment}>
                           <View>
-                            <Text>{comment.id}. {comment.name} ({comment.email})</Text>
+                            <Text style={styles.commentName}>{comment.name}</Text>
                           </View>
                           <View style={styles.separator}></View>
                           <View>
-                            <Text>{comment.body}</Text>
+                            <Text style={styles.commentBody}>{comment.body}</Text>
                           </View>
                       </View>
                   )
@@ -202,7 +234,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontWeight: 'bold',
-    fontSize: 20
+    fontSize: 24
   },
   postsWrapper: {
     display: 'flex',
@@ -234,7 +266,9 @@ const styles = StyleSheet.create({
   postTitle: {
     paddingBottom: 5,
     fontWeight: 'bold',
-    textTransform: 'capitalize'
+    textTransform: 'capitalize',
+    fontSize: 18,
+    paddingBottom: 10
   },
   separator: {
     width: '100%',
@@ -312,10 +346,6 @@ const styles = StyleSheet.create({
   backBtn: {
     backgroundColor: 'black',
     color: 'white',
-    borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5,
-    borderTopLeftRadius: 5,
-    borderTopRightRadius: 5,
     paddingTop: 5,
     paddingBottom: 5,
     width: 80,
@@ -325,5 +355,31 @@ const styles = StyleSheet.create({
   comment: {
     marginTop: 15,
     marginBottom: 25
+  },
+  commentsWrapper: {
+    paddingTop: 50
+  },
+  commentName: {
+    fontWeight: 'bold',
+    paddingBottom: 10,
+    fontSize: 16
+  },
+  commentBody: {
+    paddingTop: 5
+  },
+  textInput: {
+    width: '100%',
+    marginBottom: 10,
+    borderColor: 'gray',
+    borderBottomWidth: 1,
+    height: 30
+  },
+  sendButtonText: {
+    backgroundColor: 'lightblue',
+    width: 100,
+    paddingTop: 10,
+    paddingBottom: 10,
+    textAlign: 'center',
+    color: 'white'
   }
 });
