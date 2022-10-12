@@ -1,17 +1,74 @@
-import react, {useEffect, useState, useRef} from 'react';
-import { StyleSheet, Text, View, Button, ScrollView, Modal, Pressable } from 'react-native';
+import react, {useEffect, useState} from 'react';
+import { StyleSheet, Text, View, ScrollView, Modal, Pressable, TouchableWithoutFeedback } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 
 const axios = require('axios').default;
 
-export default function App() {
+const PostDetails = (props) => {
+
+  const postId = props.idPost;
+  const [onePost, setOnePost] = useState([]);
+  const [commentsList, setCommentsList] = useState([]);
+
+  const getOnePost = () => {
+      axios.get(`https://jsonplaceholder.typicode.com/posts/${postId}`)
+          .then(response => setOnePost(response.data))
+  }
+
+  const getPostComments = () => {
+      axios.get(`https://jsonplaceholder.typicode.com/comments?postId=${postId}`)
+          .then(response => setCommentsList(response.data))
+  }
+
+  useEffect(() => {
+      getOnePost();
+      getPostComments();
+  }, []);
+
+  return (
+      <>
+          <ScrollView style={styles.detailsWrapper}>
+              <Text onPress={() => {
+                  props.func();
+              }} style={styles.backBtn}>Go back</Text>
+              <Text style={styles.title}>Post details</Text>
+              <View style={styles.postsWrapper}>
+                  <View style={styles.postDetails}>
+                      <Text style={styles.postTitle}>{onePost.id}. {onePost.title}</Text>
+                      <View style={styles.separator}></View>
+                      <Text style={styles.content}>{onePost.body}</Text>
+                  </View>
+              </View>
+              <View style={styles.commentsWrapper}>
+                  <Text style={styles.title}>Comments: {commentsList.length}</Text>
+                  {commentsList.map(comment => {
+                  return(
+                      <View style={styles.comment}>
+                          <View>
+                            <Text>{comment.id}. {comment.name} ({comment.email})</Text>
+                          </View>
+                          <View style={styles.separator}></View>
+                          <View>
+                            <Text>{comment.body}</Text>
+                          </View>
+                      </View>
+                  )
+                  })}
+              </View>
+          </ScrollView>
+      </>
+  )
+}
+
+const App = () => {
 
   const [posts, setPosts] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [postId, setPostId] = useState(0)
+  const [details, setDetails] = useState(false);
+  const [postId, setPostId] = useState(0);
 
   const getData = () => {
-    axios.get(`https://jsonplaceholder.typicode.com/posts?_page=0&_limit=10`)
+    axios.get(`https://jsonplaceholder.typicode.com/posts`)
         .then(response => setPosts(response.data))
   }
 
@@ -49,76 +106,86 @@ export default function App() {
     setModalVisible(!modalVisible);
   }
 
-  const showDetails = () => {
+  const toggleDetails = () => {
+    setDetails(!details)
+  }
+  
+  if (details) {
     return (
       <>
-
+        <PostDetails idPost={postId} func={toggleDetails}/>
       </>
     )
-  }
-
-  return (
-    <>
-      <ScrollView style={styles.container}>
-        <Text onPress={toggleModal}>Blogs list:</Text>
-        <View style={styles.postsWrapper}>
-          {posts.map(post => {
-              return (
-                <Swipeable
-                  key={post.id}
-                  renderRightActions={rightSwipeActions}
-                  onSwipeableRightOpen={() => {
-                    setPostId(post.id)
-                  }}
-                  onPress={showDetails}
-                >
-                  <View style={styles.post}>
-                    <Text style={styles.title}>{post.id}. {post.title}</Text>
-                    <View style={styles.separator}></View>
-                    <Text numberOfLines={2} style={styles.content}>{post.body}</Text>
-                  </View>
-                </Swipeable>
-              )
-          })}
-        </View>
-      </ScrollView>
-      <View style={styles.centeredView}>
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => {
-            Alert.alert("Modal has been closed.");
-            setModalVisible(!modalVisible);
-          }}
-        >
-          <View style={styles.centeredView}>
-            <View style={styles.modalView}>
-              <Text style={styles.modalText}>Delete Post?</Text>
-              <View style={styles.btnWrapper}>
-                <Pressable
-                  style={[styles.button, styles.buttonClose, styles.buttonConfirm]}
-                  onPress={(e) => {
-                    setModalVisible(!modalVisible);
-                    deletePost();
-                  }}
-                >
-                  <Text style={styles.textStyle}>Confirm</Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.button, styles.buttonClose, styles.buttonCancel]}
-                  onPress={() => setModalVisible(!modalVisible)}
-                >
-                  <Text style={styles.textStyle}>Cancel</Text>
-                </Pressable>
+  } else {
+    return (
+      <>
+        <ScrollView style={styles.container}>
+          <Text style={styles.title}>Blogs list:</Text>
+          <View style={styles.postsWrapper}>
+            {posts.map(post => {
+                return (
+                  <Swipeable
+                    key={post.id}
+                    renderRightActions={rightSwipeActions}
+                    onSwipeableRightOpen={() => {
+                      setPostId(post.id)
+                    }}
+                  >
+                    <TouchableWithoutFeedback onPress={() => {
+                        setPostId(post.id)
+                        toggleDetails()
+                      }}>
+                      <View style={styles.post}>
+                        <Text style={styles.postTitle}>{post.id}. {post.title}</Text>
+                        <View style={styles.separator}></View>
+                        <Text numberOfLines={2} style={styles.content}>{post.body}</Text>
+                      </View>
+                    </TouchableWithoutFeedback>
+                  </Swipeable>
+                )
+            })}
+          </View>
+        </ScrollView>
+        <View style={styles.centeredView}>
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => {
+              Alert.alert("Modal has been closed.");
+              setModalVisible(!modalVisible);
+            }}
+          >
+            <View style={styles.centeredView}>
+              <View style={styles.modalView}>
+                <Text style={styles.modalText}>Delete Post?</Text>
+                <View style={styles.btnWrapper}>
+                  <Pressable
+                    style={[styles.button, styles.buttonClose, styles.buttonConfirm]}
+                    onPress={(e) => {
+                      setModalVisible(!modalVisible);
+                      deletePost();
+                    }}
+                  >
+                    <Text style={styles.textStyle}>Confirm</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.button, styles.buttonClose, styles.buttonCancel]}
+                    onPress={() => setModalVisible(!modalVisible)}
+                  >
+                    <Text style={styles.textStyle}>Cancel</Text>
+                  </Pressable>
+                </View>
               </View>
             </View>
-          </View>
-        </Modal>
-      </View>
-    </>
-  );
+          </Modal>
+        </View>
+      </>
+    );
+  }  
 }
+
+export default App;
 
 const styles = StyleSheet.create({
   container: {
@@ -126,6 +193,16 @@ const styles = StyleSheet.create({
     marginTop: 75,
     paddingLeft: 15,
     paddingRight: 15
+  },
+  detailsWrapper: {
+    marginTop: 75,
+    display: 'flex',
+    paddingLeft: 15,
+    paddingRight: 15
+  },
+  title: {
+    fontWeight: 'bold',
+    fontSize: 20
   },
   postsWrapper: {
     display: 'flex',
@@ -145,7 +222,16 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     backgroundColor: '#fff'
   },
-  title: {
+  postDetails: {
+    width: '100%',
+    marginBottom: 25,
+    backgroundColor: '#fff',
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+  },
+  postTitle: {
     paddingBottom: 5,
     fontWeight: 'bold',
     textTransform: 'capitalize'
@@ -222,5 +308,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'orange',
     display: 'inline',
     marginLeft: 5
+  },
+  backBtn: {
+    backgroundColor: 'black',
+    color: 'white',
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+    paddingTop: 5,
+    paddingBottom: 5,
+    width: 80,
+    textAlign: 'center',
+    marginBottom: 25
+  },
+  comment: {
+    marginTop: 15,
+    marginBottom: 25
   }
 });
