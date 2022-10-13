@@ -23,6 +23,8 @@ const PostDetails = (props) => {
   const postId = props.idPost;
   const [onePost, setOnePost] = useState([]);
   const [commentsList, setCommentsList] = useState([]);
+  const [name, setName] = useState('');
+  const [comment, setComment] = useState('');
 
   const getOnePost = () => {
       axios.get(`https://jsonplaceholder.typicode.com/posts/${postId}`)
@@ -34,12 +36,26 @@ const PostDetails = (props) => {
           .then(response => setCommentsList(response.data))
   }
 
+  const addComment = () => {
+    axios.get(`https://jsonplaceholder.typicode.com/comments?postId=${postId}`)
+        .then((response) => {
+          setCommentsList(response.data)
+          commentsList.unshift({name: name, body: comment});
+
+          setCommentsList(commentsList);
+        });
+
+    setName('')
+    setComment('')
+  }
+
   useEffect(() => {
       getOnePost();
       getPostComments();
   }, []);
 
   return (
+    
       <>
           <ScrollView style={styles.detailsWrapper}>
               <Text onPress={() => {
@@ -60,13 +76,22 @@ const PostDetails = (props) => {
                     style={styles.textInput}
                     placeholder="Your name"
                     maxLength={255}
+                    onChangeText={newText => setName(newText)}
+                    value={name}
                   />
                   <TextInput
                     style={styles.textInput}
                     placeholder="Your comment"
                     maxLength={500}
+                    onChangeText={newText => setComment(newText)}
+                    value={comment}
                   />
-                  <TouchableWithoutFeedback style={styles.sendButton} onPress={handleSubmit}>
+                  <TouchableWithoutFeedback style={styles.sendButton} 
+                  onPress={(e) => {
+                    e.preventDefault();
+                    addComment()
+                  }}
+                  >
                     <Text style={styles.sendButtonText}>Send</Text>
                   </TouchableWithoutFeedback>
                 </View>
@@ -75,7 +100,7 @@ const PostDetails = (props) => {
                   <Text style={styles.title}>Comments: {commentsList.length}</Text>
                   {commentsList.map(comment => {
                   return(
-                      <View style={styles.comment}>
+                      <View key={comment.id} style={styles.comment}>
                           <View>
                             <Text style={styles.commentName}>{comment.name}</Text>
                           </View>
