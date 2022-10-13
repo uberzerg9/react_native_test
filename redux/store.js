@@ -1,15 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { persistStore, persistReducer } from 'redux-persist'
-import storage from 'redux-persist/lib/storage' 
-import {createStore} from 'redux';
+import {createStore, combineReducers, applyMiddleware} from 'redux';
+import thunk from 'redux-thunk';
 import CommentsReducer from './reducers/CommentsReducer';
 
-const persistConfig = {
-    key: 'root',
-    storage: AsyncStorage,
-  }
+const rootReducer = combineReducers({CommentsReducer});
 
-const persistedReducer = persistReducer(persistConfig, CommentsReducer);
-
-export const store = createStore(persistedReducer);
-export const persistor = persistStore(store)
+export const Store = createStore(rootReducer, applyMiddleware(thunk))

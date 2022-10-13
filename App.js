@@ -16,13 +16,13 @@ import {
 
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 
-import { PersistGate } from 'redux-persist/integration/react'
+import {Provider} from 'react-redux'
+import {Store} from './redux/store'
 
-import {store, persistor} from './redux/store';
-import {Provider} from 'react-redux';
+import {CommentsReducer} from './redux/reducers/CommentsReducer'
 
-import { useSelector, useDispatch } from 'react-redux';
-import { addCommentStore } from './redux/action';
+import {useSelector, useDispatch} from 'react-redux';
+import {setUserName, setUserComment, setCommentId, setPostId} from './redux/action'
 
 const axios = require('axios').default;
 
@@ -35,8 +35,8 @@ const PostDetails = (props) => {
   const [name, setName] = useState('');
   const [comment, setComment] = useState('');
 
-  const storeCommentsList = useSelector(state => state.comment)
-  const dispatch = useDispatch();
+  const sotrageComments = useSelector(state => state.CommentsReducer)
+  const dispatch = useDispatch()
 
   const getOnePost = () => {
       axios.get(`https://jsonplaceholder.typicode.com/posts/${postId}`)
@@ -53,10 +53,13 @@ const PostDetails = (props) => {
       axios.get(`https://jsonplaceholder.typicode.com/comments?postId=${postId}`)
       .then((response) => {
         setCommentsList(response.data)
-        commentsList.unshift({name: name, body: comment});
+        commentsList.unshift({postId: postId, id: commentsList.length + 1, name: name, body: comment});
 
         setCommentsList(commentsList);
-        dispatch(addCommentStore(commentsList))
+        dispatch(setUserName(name))
+        dispatch(setUserComment(comment))
+        dispatch(setCommentId(commentsList.length + 1))
+        dispatch(setPostId(postId))
       });
 
       setName('')
@@ -74,7 +77,6 @@ const PostDetails = (props) => {
   }, []);
 
   return (
-      
       <>
           <ScrollView style={styles.detailsWrapper}>
               <Text onPress={() => {
@@ -95,14 +97,18 @@ const PostDetails = (props) => {
                     style={styles.textInput}
                     placeholder="Your name"
                     maxLength={255}
-                    onChangeText={newText => setName(newText)}
+                    onChangeText={newText => {
+                      setName(newText)
+                    }}
                     value={name}
                   />
                   <TextInput
                     style={styles.textInput}
                     placeholder="Your comment"
                     maxLength={500}
-                    onChangeText={newText => setComment(newText)}
+                    onChangeText={newText => {
+                      setComment(newText)
+                    }}
                     value={comment}
                   />
                   <TouchableWithoutFeedback style={styles.sendButton} 
@@ -188,11 +194,9 @@ const App = () => {
   
   if (details) {
     return (
-      <Provider store={store}>
-          <PersistGate loading={<Text>Loading...</Text>} persistor={persistor}>
-            <PostDetails idPost={postId} func={toggleDetails}/>
-          </PersistGate>
-      </Provider>
+        <Provider store={Store}>
+          <PostDetails idPost={postId} func={toggleDetails}/>
+        </Provider>
     )
   } else {
     return (
