@@ -16,15 +16,27 @@ import {
 
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 
+import { PersistGate } from 'redux-persist/integration/react'
+
+import {store, persistor} from './redux/store';
+import {Provider} from 'react-redux';
+
+import { useSelector, useDispatch } from 'react-redux';
+import { addCommentStore } from './redux/action';
+
 const axios = require('axios').default;
 
 const PostDetails = (props) => {
 
   const postId = props.idPost;
+  
   const [onePost, setOnePost] = useState([]);
   const [commentsList, setCommentsList] = useState([]);
   const [name, setName] = useState('');
   const [comment, setComment] = useState('');
+
+  const storeCommentsList = useSelector(state => state.comment)
+  const dispatch = useDispatch();
 
   const getOnePost = () => {
       axios.get(`https://jsonplaceholder.typicode.com/posts/${postId}`)
@@ -37,16 +49,23 @@ const PostDetails = (props) => {
   }
 
   const addComment = () => {
-    axios.get(`https://jsonplaceholder.typicode.com/comments?postId=${postId}`)
-        .then((response) => {
-          setCommentsList(response.data)
-          commentsList.unshift({name: name, body: comment});
+    if (name !== '' || comment !== '') {
+      axios.get(`https://jsonplaceholder.typicode.com/comments?postId=${postId}`)
+      .then((response) => {
+        setCommentsList(response.data)
+        commentsList.unshift({name: name, body: comment});
 
-          setCommentsList(commentsList);
-        });
+        setCommentsList(commentsList);
+        dispatch(addCommentStore(commentsList))
+      });
 
-    setName('')
-    setComment('')
+      setName('')
+      setComment('')
+      setCommentsList([])
+    } else {
+      return false;
+    }
+    
   }
 
   useEffect(() => {
@@ -55,7 +74,7 @@ const PostDetails = (props) => {
   }, []);
 
   return (
-    
+      
       <>
           <ScrollView style={styles.detailsWrapper}>
               <Text onPress={() => {
@@ -169,9 +188,11 @@ const App = () => {
   
   if (details) {
     return (
-      <>
-        <PostDetails idPost={postId} func={toggleDetails}/>
-      </>
+      <Provider store={store}>
+          <PersistGate loading={<Text>Loading...</Text>} persistor={persistor}>
+            <PostDetails idPost={postId} func={toggleDetails}/>
+          </PersistGate>
+      </Provider>
     )
   } else {
     return (
